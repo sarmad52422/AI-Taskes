@@ -1,0 +1,29 @@
+name = "billing-proration-drift"
+
+author_name = "Muhammad Nauman"
+author_email = "nomanawantest1@gmail.com"
+
+category = "software_engineering"
+tags = ["python", "backend", "debugging", "billing", "state-management"]
+
+difficulty = "medium"
+expert_time_estimate_hours = 2
+
+difficulty_explanation = """
+This task requires debugging a multi-file Python workflow where billing adjustment state can drift across repeated worker runs. The issue involves ledger posting, retry handling, stale metadata cleanup, idempotency, and preservation of terminal billing records.
+"""
+
+solution_explanation = """
+The intended solution corrects proration state transitions, prevents duplicate ledger effects, clears stale retry metadata after successful recovery, and keeps terminal records stable across repeated runs.
+"""
+
+verification_explanation = """
+Verification uses pytest-based behavioral tests that validate ledger persistence, retry behavior, repeated execution stability, partial ledger recovery, stale state cleanup, and consistency of persisted billing state.
+"""
+
+domain = "Subscription Billing Reliability"
+
+timeout = 120
+cpu = 1
+memory = "1GiB"
+disk = "1GiB"

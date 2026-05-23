@@ -1,0 +1,77 @@
+{
+  "accounts": {
+    "acct-main": {
+      "periods": {
+        "2026-05": {
+          "open": true,
+          "remaining_cents": 5000
+        }
+      }
+    },
+    "acct-legacy": {
+      "periods": {
+        "2026-05": {
+          "open": true,
+          "remaining_cents": 2500
+        }
+      }
+    }
+  },
+  "jobs": [
+    {
+      "adjustment_id": "adj-seed-pending",
+      "amount_cents": 1200,
+      "customer_id": "acct-main",
+      "ledger_entry_ids": [],
+      "metadata": {
+        "source": "plan-change"
+      },
+      "period": "2026-05",
+      "retries": 0,
+      "status": "pending"
+    },
+    {
+      "adjustment_id": "adj-seed-retry",
+      "amount_cents": 800,
+      "customer_id": "acct-main",
+      "failure_reason": "period_unavailable",
+      "ledger_entry_ids": [],
+      "metadata": {
+        "last_error": "period_unavailable",
+        "retry_after": "next-run",
+        "source": "seat-change"
+      },
+      "period": "2026-05",
+      "retries": 1,
+      "status": "retrying"
+    },
+    {
+      "adjustment_id": "adj-seed-completed",
+      "amount_cents": 500,
+      "customer_id": "acct-legacy",
+      "ledger_entry_ids": [
+        "adj-seed-completed:2026-05"
+      ],
+      "metadata": {
+        "completed_at": "2026-05-01T09:00:00Z",
+        "source": "migration"
+      },
+      "period": "2026-05",
+      "retries": 0,
+      "status": "completed"
+    }
+  ],
+  "ledger": {
+    "acct-legacy": {
+      "entries": {
+        "adj-seed-completed:2026-05": {
+          "adjustment_id": "adj-seed-completed",
+          "amount_cents": 500,
+          "period": "2026-05",
+          "posted_by": "migration",
+          "write_count": 1
+        }
+      }
+    }
+  }
+}
