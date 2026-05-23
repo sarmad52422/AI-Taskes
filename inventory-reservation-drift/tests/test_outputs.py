@@ -5,30 +5,36 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 APP_SOURCE = Path(os.environ.get("APP_SOURCE_DIR", "/app"))
 
 
-def write_json(path, payload):
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+def write_document(path, document):
+    path.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n")
 
 
-def read_json(path):
+def read_document(path):
     return json.loads(path.read_text())
 
 
-def run_worker(tmp_path, jobs, inventory):
-    write_json(tmp_path / "jobs.json", copy.deepcopy(jobs))
-    write_json(tmp_path / "inventory.json", copy.deepcopy(inventory))
-    env = os.environ.copy()
-    env["RESERVATION_APP_DIR"] = str(tmp_path)
-    subprocess.run(
-        [sys.executable, str(APP_SOURCE / "reservation_worker.py")],
+def run_worker(tmp_path, document):
+    write_document(tmp_path / "jobs.json", copy.deepcopy(document))
+    script = (
+        "import json, sys; "
+        f"sys.path.insert(0, {str(APP_SOURCE)!r}); "
+        "import reservation_worker; "
+        f"result = reservation_worker.run({str(tmp_path)!r}); "
+        "print(json.dumps(result, sort_keys=True))"
+    )
+    completed = subprocess.run(
+        [sys.executable, "-c", script],
         cwd=str(APP_SOURCE),
-        env=env,
+        text=True,
+        capture_output=True,
         check=True,
     )
-    return read_json(tmp_path / "jobs.json"), read_json(tmp_path / "inventory.json")
+    returned = json.loads(completed.stdout)
+    persisted = read_document(tmp_path / "jobs.json")
+    return returned, persisted
 
 
 def base_job(status="pending", retries=0, quantity=2, reservation_id="res-1"):
@@ -55,67 +61,104 @@ def inventory_for(available, reserved=None):
     }
 
 
-def test_pending_reservation_holds_stock(tmp_path):
-    jobs, inventory = run_worker(tmp_path, [base_job()], inventory_for(5))
-    assert jobs[0]["status"] == "reserved"
-    assert jobs[0]["reservation_ids"] == ["res-1"]
-    assert inventory["east"]["sku-a"]["available"] == 3
-    assert inventory["east"]["sku-a"]["reserved"] == {"res-1": 2}
+def document_for(jobs, inventory):
+    return {"jobs": jobs, "inventory": inventory}
 
 
-def test_retrying_reservation_is_reprocessed(tmp_path):
+def test_worker_returns_same_state_that_was_persisted(tmp_path):
+    document = document_for([base_job(quantity=1)], inventory_for(5))
+    returned, persisted = run_worker(tmp_path, document)
+    assert returned == persisted
+
+
+def test_pending_reservation_reserves_stock(tmp_path):
+    document = document_for([base_job()], inventory_for(5))
+    returned, persisted = run_worker(tmp_path, document)
+    job = returned["jobs"][0]
+    item = persisted["inventory"]["east"]["sku-a"]
+    assert job["status"] == "reserved"
+    assert job["reservation_ids"] == ["res-1"]
+    assert item["available"] == 3
+    assert item["reserved"] == {"res-1": 2}
+
+
+def test_insufficient_partial_stock_moves_to_retrying(tmp_path):
+    document = document_for([base_job(quantity=5)], inventory_for(3))
+    returned, persisted = run_worker(tmp_path, document)
+    job = returned["jobs"][0]
+    item = persisted["inventory"]["east"]["sku-a"]
+    assert job["status"] == "retrying"
+    assert job["retries"] == 1
+    assert job["failure_reason"] == "partial_stock"
+    assert item["available"] == 3
+    assert item["reserved"] == {}
+
+
+def test_retrying_reservation_recovers_when_stock_exists(tmp_path):
     job = base_job(status="retrying", retries=1, quantity=3)
     job["failure_reason"] = "out_of_stock"
     job["metadata"].update({"last_error": "out_of_stock", "retry_after": "next-run"})
-    jobs, inventory = run_worker(tmp_path, [job], inventory_for(4))
-    assert jobs[0]["status"] == "reserved"
-    assert inventory["east"]["sku-a"]["available"] == 1
-    assert inventory["east"]["sku-a"]["reserved"] == {"res-1": 3}
+    document = document_for([job], inventory_for(4))
+    returned, persisted = run_worker(tmp_path, document)
+    assert returned["jobs"][0]["status"] == "reserved"
+    assert persisted["inventory"]["east"]["sku-a"]["available"] == 1
+    assert persisted["inventory"]["east"]["sku-a"]["reserved"] == {"res-1": 3}
 
 
-def test_completed_reservation_is_not_mutated(tmp_path):
+def test_exhausted_retry_moves_to_failed(tmp_path):
+    job = base_job(status="retrying", retries=3, quantity=1)
+    job["failure_reason"] = "out_of_stock"
+    document = document_for([job], inventory_for(0))
+    returned, persisted = run_worker(tmp_path, document)
+    assert returned["jobs"][0]["status"] == "failed"
+    assert returned["jobs"][0]["retries"] == 3
+    assert returned["jobs"][0]["failure_reason"] == "out_of_stock"
+    assert persisted["inventory"]["east"]["sku-a"]["available"] == 0
+
+
+def test_completed_job_remains_unchanged(tmp_path):
     job = base_job(status="completed", reservation_id="done-1")
     job["reservation_ids"] = ["done-1"]
     job["metadata"] = {"source": "orders", "completed_at": "2026-05-01T12:00:00Z"}
-    inventory = inventory_for(7, {"done-1": 2})
-    original_job = copy.deepcopy(job)
-    original_inventory = copy.deepcopy(inventory)
-    jobs, updated_inventory = run_worker(tmp_path, [job], inventory)
-    assert jobs[0] == original_job
-    assert updated_inventory == original_inventory
+    document = document_for([job], inventory_for(7, {"done-1": 2}))
+    original = copy.deepcopy(document)
+    returned, persisted = run_worker(tmp_path, document)
+    assert returned == original
+    assert persisted == original
 
 
-def test_failed_reservation_is_not_mutated(tmp_path):
+def test_failed_job_remains_unchanged(tmp_path):
     job = base_job(status="failed", retries=3)
     job["failure_reason"] = "out_of_stock"
-    job["metadata"].update({"last_error": "out_of_stock", "last_attempt_status": "failed"})
-    inventory = inventory_for(0)
-    original_job = copy.deepcopy(job)
-    jobs, updated_inventory = run_worker(tmp_path, [job], inventory)
-    assert jobs[0] == original_job
-    assert updated_inventory == inventory
+    job["metadata"].update(
+        {"last_error": "out_of_stock", "last_attempt_status": "failed"}
+    )
+    document = document_for([job], inventory_for(0))
+    original = copy.deepcopy(document)
+    returned, persisted = run_worker(tmp_path, document)
+    assert returned == original
+    assert persisted == original
+
+
+def test_repeated_runs_do_not_double_deduct_inventory(tmp_path):
+    document = document_for([base_job(quantity=2)], inventory_for(9))
+    returned, persisted = run_worker(tmp_path, document)
+    first_available = persisted["inventory"]["east"]["sku-a"]["available"]
+    returned, persisted = run_worker(tmp_path, returned)
+    assert persisted["inventory"]["east"]["sku-a"]["available"] == first_available
+    assert persisted["inventory"]["east"]["sku-a"]["available"] == 7
+    assert persisted["inventory"]["east"]["sku-a"]["reserved"] == {"res-1": 2}
 
 
 def test_repeated_runs_do_not_duplicate_reservation_ids(tmp_path):
-    job = base_job(quantity=1)
-    inventory = inventory_for(5)
-    jobs, inventory = run_worker(tmp_path, [job], inventory)
-    jobs, inventory = run_worker(tmp_path, jobs, inventory)
-    assert jobs[0]["reservation_ids"] == ["res-1"]
-    assert inventory["east"]["sku-a"]["reserved"] == {"res-1": 1}
+    document = document_for([base_job(quantity=1)], inventory_for(5))
+    returned, persisted = run_worker(tmp_path, document)
+    returned, persisted = run_worker(tmp_path, returned)
+    assert returned["jobs"][0]["reservation_ids"] == ["res-1"]
+    assert persisted["inventory"]["east"]["sku-a"]["reserved"] == {"res-1": 1}
 
 
-def test_repeated_runs_do_not_consume_additional_inventory(tmp_path):
-    job = base_job(quantity=2)
-    inventory = inventory_for(9)
-    jobs, inventory = run_worker(tmp_path, [job], inventory)
-    available_after_first = inventory["east"]["sku-a"]["available"]
-    jobs, inventory = run_worker(tmp_path, jobs, inventory)
-    assert inventory["east"]["sku-a"]["available"] == available_after_first
-    assert inventory["east"]["sku-a"]["available"] == 7
-
-
-def test_retry_success_cleans_stale_failure_state(tmp_path):
+def test_retry_success_clears_stale_metadata_and_failure_state(tmp_path):
     job = base_job(status="retrying", retries=2, quantity=2)
     job["failure_reason"] = "partial_stock"
     job["metadata"].update(
@@ -126,66 +169,47 @@ def test_retry_success_cleans_stale_failure_state(tmp_path):
             "customer_note": "ship together",
         }
     )
-    jobs, inventory = run_worker(tmp_path, [job], inventory_for(6))
-    metadata = jobs[0]["metadata"]
-    assert jobs[0]["status"] == "reserved"
-    assert "failure_reason" not in jobs[0]
+    document = document_for([job], inventory_for(6))
+    returned, persisted = run_worker(tmp_path, document)
+    metadata = returned["jobs"][0]["metadata"]
+    assert returned["jobs"][0]["status"] == "reserved"
+    assert "failure_reason" not in returned["jobs"][0]
     assert "last_error" not in metadata
     assert "retry_after" not in metadata
-    assert "retry_started_at" not in metadata
     assert metadata["customer_note"] == "ship together"
-    assert inventory["east"]["sku-a"]["available"] == 4
+    assert persisted["inventory"]["east"]["sku-a"]["available"] == 4
 
 
-def test_partial_shortage_moves_to_retrying(tmp_path):
-    job = base_job(quantity=5)
-    jobs, inventory = run_worker(tmp_path, [job], inventory_for(3))
-    assert jobs[0]["status"] == "retrying"
-    assert jobs[0]["retries"] == 1
-    assert jobs[0]["failure_reason"] == "partial_stock"
-    assert inventory["east"]["sku-a"]["available"] == 3
-    assert inventory["east"]["sku-a"]["reserved"] == {}
+def test_retry_recovery_tops_up_existing_partial_hold(tmp_path):
+    job = base_job(status="retrying", retries=2, quantity=5)
+    job["reservation_ids"] = ["res-1", "res-1"]
+    job["failure_reason"] = "partial_stock"
+    job["metadata"].update(
+        {
+            "last_error": "partial_stock",
+            "retry_after": "next-run",
+            "customer_note": "hold together",
+        }
+    )
+    document = document_for([job], inventory_for(3, {"res-1": 2}))
+    returned, persisted = run_worker(tmp_path, document)
+    recovered = returned["jobs"][0]
+    item = persisted["inventory"]["east"]["sku-a"]
+    assert recovered["status"] == "reserved"
+    assert recovered["reservation_ids"] == ["res-1"]
+    assert "failure_reason" not in recovered
+    assert "last_error" not in recovered["metadata"]
+    assert recovered["metadata"]["customer_note"] == "hold together"
+    assert item["available"] == 0
+    assert item["reserved"] == {"res-1": 5}
 
 
-def test_retry_limit_exhaustion_fails_reservation(tmp_path):
-    job = base_job(status="retrying", retries=3, quantity=1)
-    job["failure_reason"] = "out_of_stock"
-    jobs, inventory = run_worker(tmp_path, [job], inventory_for(0))
-    assert jobs[0]["status"] == "failed"
-    assert jobs[0]["retries"] == 3
-    assert jobs[0]["failure_reason"] == "out_of_stock"
-    assert inventory["east"]["sku-a"]["available"] == 0
-
-
-def test_retry_below_limit_remains_retrying(tmp_path):
-    job = base_job(status="retrying", retries=1, quantity=1)
-    jobs, inventory = run_worker(tmp_path, [job], inventory_for(0))
-    assert jobs[0]["status"] == "retrying"
-    assert jobs[0]["retries"] == 2
-    assert jobs[0]["failure_reason"] == "out_of_stock"
-    assert inventory["east"]["sku-a"]["reserved"] == {}
-
-
-def test_mixed_batch_only_processes_active_jobs(tmp_path):
-    pending = base_job(quantity=2, reservation_id="new-1")
-    completed = base_job(status="completed", reservation_id="done-1")
-    completed["reservation_ids"] = ["done-1"]
-    failed = base_job(status="failed", retries=3, reservation_id="bad-1")
-    failed["failure_reason"] = "out_of_stock"
-    failed["metadata"]["last_error"] = "out_of_stock"
-    inventory = inventory_for(6, {"done-1": 1})
-    jobs, inventory = run_worker(tmp_path, [pending, completed, failed], inventory)
-    assert jobs[0]["status"] == "reserved"
-    assert jobs[1] == completed
-    assert jobs[2] == failed
-    assert inventory["east"]["sku-a"]["available"] == 4
-    assert inventory["east"]["sku-a"]["reserved"] == {"done-1": 1, "new-1": 2}
-
-
-def test_existing_reserved_record_is_stable(tmp_path):
-    job = base_job(status="reserved", quantity=2)
-    job["reservation_ids"] = ["res-1"]
-    inventory = inventory_for(4, {"res-1": 2})
-    jobs, updated_inventory = run_worker(tmp_path, [job], inventory)
-    assert jobs[0] == job
-    assert updated_inventory == inventory
+def test_original_metadata_is_preserved_on_success(tmp_path):
+    job = base_job(quantity=2)
+    job["metadata"] = {"source": "orders", "priority": "expedite"}
+    document = document_for([job], inventory_for(8))
+    returned, persisted = run_worker(tmp_path, document)
+    metadata = returned["jobs"][0]["metadata"]
+    assert metadata["source"] == "orders"
+    assert metadata["priority"] == "expedite"
+    assert persisted["inventory"]["east"]["sku-a"]["available"] == 6

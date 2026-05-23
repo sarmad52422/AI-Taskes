@@ -2,45 +2,37 @@ import json
 from pathlib import Path
 
 
-def load_json(path):
-    with Path(path).open() as handle:
+def load_document(app_dir):
+    with (Path(app_dir) / "jobs.json").open() as handle:
         return json.load(handle)
 
 
-def save_json(path, payload):
-    with Path(path).open("w") as handle:
-        json.dump(payload, handle, indent=2, sort_keys=True)
+def save_document(app_dir, document):
+    with (Path(app_dir) / "jobs.json").open("w") as handle:
+        json.dump(document, handle, indent=2, sort_keys=True)
         handle.write("\n")
 
 
-def read_jobs(app_dir):
-    return load_json(Path(app_dir) / "jobs.json")
+def jobs(document):
+    return document.setdefault("jobs", [])
 
 
-def write_jobs(app_dir, jobs):
-    save_json(Path(app_dir) / "jobs.json", jobs)
+def inventory(document):
+    return document.setdefault("inventory", {})
 
 
-def read_inventory(app_dir):
-    return load_json(Path(app_dir) / "inventory.json")
-
-
-def write_inventory(app_dir, inventory):
-    save_json(Path(app_dir) / "inventory.json", inventory)
-
-
-def item_record(inventory, warehouse, item_id):
-    warehouse_items = inventory.setdefault(warehouse, {})
+def item_record(document, warehouse, item_id):
+    warehouse_items = inventory(document).setdefault(warehouse, {})
     return warehouse_items.setdefault(item_id, {"available": 0, "reserved": {}})
 
 
-def available_quantity(inventory, job):
-    item = item_record(inventory, job["warehouse"], job["item_id"])
+def available_quantity(document, job):
+    item = item_record(document, job["warehouse"], job["item_id"])
     return int(item.get("available", 0))
 
 
-def reserve_stock(inventory, job):
-    item = item_record(inventory, job["warehouse"], job["item_id"])
+def reserve_stock(document, job):
+    item = item_record(document, job["warehouse"], job["item_id"])
     quantity = int(job["quantity"])
     available = int(item.get("available", 0))
     if available < quantity:

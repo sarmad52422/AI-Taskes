@@ -1,12 +1,17 @@
-The reservation worker has started drifting state when the same batch is run more than once. We have seen inventory counts move without new work, duplicate reservation IDs on records, and retry records that still look failed after they later reserve successfully.
+The warehouse reservation worker is drifting reservation state when the same batch is run more than once. Operators have seen inventory counts change without new demand, duplicate reservation IDs on recovered jobs, and retry records that still carry old failure details after stock becomes available.
 
-The code lives in `/app`:
+The worker reads and writes `/app/jobs.json`. That file contains an `inventory` object and a `jobs` list. Each job includes:
 
-- `/app/reservation_worker.py`
-- `/app/inventory_store.py`
-- `/app/reservation_rules.py`
-- `/app/jobs.json`
-- `/app/inventory.json`
+- `reservation_id`
+- `status`
+- `retries`
+- `item_id`
+- `quantity`
+- `warehouse`
+- `reservation_ids`
+- `metadata`
+
+Statuses can be `pending`, `retrying`, `reserved`, `released`, `failed`, or `completed`.
 
 Run the worker with:
 
@@ -14,19 +19,6 @@ Run the worker with:
 python /app/reservation_worker.py
 ```
 
-Fix the reservation lifecycle so the persisted job and inventory JSON files remain consistent across repeated runs.
+The reservation lifecycle should be stable across repeated worker runs. Pending jobs should reserve stock when enough inventory exists, and retrying jobs should be attempted again. Completed and failed jobs are terminal records and must remain unchanged. A job that cannot reserve because only part of the requested quantity is available should move into retrying before it is failed. Once the retry limit is exhausted, an unavailable reservation should become failed.
 
-Expected behavior:
-
-- `pending` jobs reserve stock when enough inventory is available.
-- `retrying` jobs are processed again.
-- `completed` jobs are historical records and must not be changed.
-- `failed` jobs are terminal and must not be changed.
-- Re-running the worker must not duplicate `reservation_ids`.
-- Re-running the worker must not reserve the same quantity twice.
-- If a retrying job succeeds, stale retry metadata and stale failure state should be removed.
-- A partial stock shortage should leave the job retrying until the retry limit is exhausted.
-- Jobs that have exhausted the retry limit should become failed when they still cannot reserve.
-- Inventory totals and reservation holds should stay aligned with the jobs that were actually processed.
-
-Keep the fix focused on the runtime files under `/app`. Do not change the tests.
+When a retrying reservation eventually succeeds, it should no longer carry stale retry or failure state, but unrelated metadata should be preserved. Re-running the worker must not duplicate `reservation_ids` or deduct stock more than once for the same reservation. If inventory already contains a hold for part of the same reservation, recovery should account for that existing hold instead of starting from zero. Inventory availability and reserved holds should stay consistent with the reservation records in `/app/jobs.json`.

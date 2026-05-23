@@ -1,16 +1,12 @@
 #!/bin/bash
-
-set -u
+set +e
 
 mkdir -p /logs/verifier
 
-if command -v uv >/dev/null 2>&1; then
-  uv tool run pytest /tests/test_outputs.py -rA
-  status=$?
-else
-  python -m pytest /tests/test_outputs.py -rA
-  status=$?
-fi
+cd /app || exit 0
+
+uvx pytest -rA /tests/test_outputs.py
+status=$?
 
 if [ "$status" -eq 0 ]; then
   echo 1 > /logs/verifier/reward.txt
@@ -18,4 +14,4 @@ else
   echo 0 > /logs/verifier/reward.txt
 fi
 
-exit "$status"
+exit 0

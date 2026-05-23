@@ -1,44 +1,66 @@
-[
-  {
-    "reservation_id": "res-seed-pending",
-    "status": "pending",
-    "retries": 0,
-    "item_id": "sku-lamp",
-    "quantity": 2,
-    "warehouse": "east",
-    "reservation_ids": [],
-    "metadata": {
-      "channel": "web"
+{
+  "inventory": {
+    "east": {
+      "sku-drill": {
+        "available": 6,
+        "reserved": {
+          "res-seed-completed": 1
+        }
+      },
+      "sku-lamp": {
+        "available": 8,
+        "reserved": {}
+      }
+    },
+    "west": {
+      "sku-cable": {
+        "available": 5,
+        "reserved": {}
+      }
     }
   },
-  {
-    "reservation_id": "res-seed-retry",
-    "status": "retrying",
-    "retries": 1,
-    "item_id": "sku-cable",
-    "quantity": 4,
-    "warehouse": "west",
-    "reservation_ids": [],
-    "failure_reason": "out_of_stock",
-    "metadata": {
-      "channel": "storefront",
-      "last_error": "out_of_stock",
-      "retry_after": "next-run"
+  "jobs": [
+    {
+      "item_id": "sku-lamp",
+      "metadata": {
+        "channel": "web"
+      },
+      "quantity": 2,
+      "reservation_id": "res-seed-pending",
+      "reservation_ids": [],
+      "retries": 0,
+      "status": "pending",
+      "warehouse": "east"
+    },
+    {
+      "failure_reason": "out_of_stock",
+      "item_id": "sku-cable",
+      "metadata": {
+        "channel": "storefront",
+        "last_error": "out_of_stock",
+        "retry_after": "next-run"
+      },
+      "quantity": 4,
+      "reservation_id": "res-seed-retry",
+      "reservation_ids": [],
+      "retries": 1,
+      "status": "retrying",
+      "warehouse": "west"
+    },
+    {
+      "item_id": "sku-drill",
+      "metadata": {
+        "channel": "bulk",
+        "completed_at": "2026-04-17T10:00:00Z"
+      },
+      "quantity": 1,
+      "reservation_id": "res-seed-completed",
+      "reservation_ids": [
+        "res-seed-completed"
+      ],
+      "retries": 0,
+      "status": "completed",
+      "warehouse": "east"
     }
-  },
-  {
-    "reservation_id": "res-seed-completed",
-    "status": "completed",
-    "retries": 0,
-    "item_id": "sku-drill",
-    "quantity": 1,
-    "warehouse": "east",
-    "reservation_ids": [
-      "res-seed-completed"
-    ],
-    "metadata": {
-      "channel": "bulk",
-      "completed_at": "2026-04-17T10:00:00Z"
-    }
-  }
-]
+  ]
+}

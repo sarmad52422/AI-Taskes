@@ -1,70 +1,60 @@
 #!/bin/bash
 set -euo pipefail
 
-python - <<'PY'
+cat > /app/inventory_store.py <<'PY'
+import json
 from pathlib import Path
 
-Path("/app/inventory_store.py").write_text('''import json
-from pathlib import Path
 
-
-def load_json(path):
-    with Path(path).open() as handle:
+def load_document(app_dir):
+    with (Path(app_dir) / "jobs.json").open() as handle:
         return json.load(handle)
 
 
-def save_json(path, payload):
-    with Path(path).open("w") as handle:
-        json.dump(payload, handle, indent=2, sort_keys=True)
-        handle.write("\\n")
+def save_document(app_dir, document):
+    with (Path(app_dir) / "jobs.json").open("w") as handle:
+        json.dump(document, handle, indent=2, sort_keys=True)
+        handle.write("\n")
 
 
-def read_jobs(app_dir):
-    return load_json(Path(app_dir) / "jobs.json")
+def jobs(document):
+    return document.setdefault("jobs", [])
 
 
-def write_jobs(app_dir, jobs):
-    save_json(Path(app_dir) / "jobs.json", jobs)
+def inventory(document):
+    return document.setdefault("inventory", {})
 
 
-def read_inventory(app_dir):
-    return load_json(Path(app_dir) / "inventory.json")
-
-
-def write_inventory(app_dir, inventory):
-    save_json(Path(app_dir) / "inventory.json", inventory)
-
-
-def item_record(inventory, warehouse, item_id):
-    warehouse_items = inventory.setdefault(warehouse, {})
+def item_record(document, warehouse, item_id):
+    warehouse_items = inventory(document).setdefault(warehouse, {})
     return warehouse_items.setdefault(item_id, {"available": 0, "reserved": {}})
 
 
-def available_quantity(inventory, job):
-    item = item_record(inventory, job["warehouse"], job["item_id"])
+def available_quantity(document, job):
+    item = item_record(document, job["warehouse"], job["item_id"])
     return int(item.get("available", 0))
 
 
-def set_job_reservation_id(job):
+def set_reservation_id(job):
     reservation_id = job["reservation_id"]
-    seen = []
+    existing = []
     for current in job.setdefault("reservation_ids", []):
-        if current not in seen:
-            seen.append(current)
-    if reservation_id not in seen:
-        seen.append(reservation_id)
-    job["reservation_ids"] = seen
+        if current not in existing:
+            existing.append(current)
+    if reservation_id not in existing:
+        existing.append(reservation_id)
+    job["reservation_ids"] = existing
 
 
-def reserve_stock(inventory, job):
-    item = item_record(inventory, job["warehouse"], job["item_id"])
+def reserve_stock(document, job):
+    item = item_record(document, job["warehouse"], job["item_id"])
     quantity = int(job["quantity"])
     reservation_id = job["reservation_id"]
     reserved = item.setdefault("reserved", {})
     already_reserved = int(reserved.get(reservation_id, 0))
     if already_reserved >= quantity:
         reserved[reservation_id] = already_reserved
-        set_job_reservation_id(job)
+        set_reservation_id(job)
         return True
 
     needed = quantity - already_reserved
@@ -74,11 +64,12 @@ def reserve_stock(inventory, job):
 
     item["available"] = available - needed
     reserved[reservation_id] = quantity
-    set_job_reservation_id(job)
+    set_reservation_id(job)
     return True
-''')
+PY
 
-Path("/app/reservation_rules.py").write_text('''MAX_RETRIES = 3
+cat > /app/reservation_rules.py <<'PY'
+MAX_RETRIES = 3
 
 PROCESSABLE_STATUSES = {"pending", "retrying"}
 STALE_RETRY_METADATA = {"last_error", "retry_after", "retry_started_at", "next_retry_at"}
@@ -127,5 +118,46 @@ def mark_reserved(job):
         metadata.pop(key, None)
     metadata["last_attempt_status"] = "reserved"
     metadata["reserved_at"] = "worker-run"
-''')
+PY
+
+cat > /app/reservation_worker.py <<'PY'
+import os
+from pathlib import Path
+
+import inventory_store
+import reservation_rules
+
+
+def process_job(document, job):
+    if not reservation_rules.should_process(job):
+        return job
+
+    if inventory_store.reserve_stock(document, job):
+        reservation_rules.mark_reserved(job)
+        return job
+
+    available = inventory_store.available_quantity(document, job)
+    reason = reservation_rules.failure_reason(job, available)
+    if reservation_rules.should_retry(job, reason):
+        reservation_rules.mark_retrying(job, reason)
+    else:
+        reservation_rules.mark_failed(job, reason)
+    return job
+
+
+def run(app_dir="/app"):
+    document = inventory_store.load_document(app_dir)
+    for job in inventory_store.jobs(document):
+        process_job(document, job)
+    inventory_store.save_document(app_dir, document)
+    return document
+
+
+def main():
+    app_dir = Path(os.environ.get("RESERVATION_APP_DIR", "/app"))
+    run(app_dir)
+
+
+if __name__ == "__main__":
+    main()
 PY
