@@ -1,0 +1,36 @@
+[
+  {
+    "id": "job-readable-malformed",
+    "status": "retrying",
+    "retries": 2,
+    "events": [
+      {
+        "kind": "session_note",
+        "text": "Player practiced waiting for the cue before moving."
+      },
+      {
+        "kind": "coach_note",
+        "text": "Timing improved late in the round."
+      }
+    ]
+  },
+  {
+    "id": "job-already-complete",
+    "status": "retrying",
+    "retries": 2,
+    "summary": "Player slowed down and found the right rhythm.",
+    "skill": "timing",
+    "events": [
+      {
+        "kind": "session_note",
+        "text": "Historical session that has already been summarized."
+      }
+    ]
+  },
+  {
+    "id": "job-empty-events",
+    "status": "retrying",
+    "retries": 2,
+    "events": []
+  }
+]

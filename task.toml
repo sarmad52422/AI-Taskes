@@ -1,0 +1,27 @@
+name = "session-summary-worker-reliability"
+
+category = "software_engineering"
+tags = ["python", "ai", "backend", "reliability", "debugging"]
+difficulty = "medium"
+expert_time_estimate_hours = 1.5
+
+difficulty_explanation = """
+This task requires debugging a multi-file Python worker where failures come from the interaction between malformed model output handling, retry logic, queue state transitions, and repeated worker runs. The issue is more involved than a single syntax fix because a correct solution must preserve existing completed records while safely handling both recoverable and unrecoverable model responses.
+"""
+
+solution_explanation = """
+The intended solution makes the worker tolerant of malformed-but-readable model responses, adds safer parsing behavior, fixes retry and failed-state transitions, preserves completed jobs, and keeps repeated runs from corrupting queue state or original session events.
+"""
+
+verification_explanation = """
+The verifier runs pytest tests against the worker behavior. Pytest is installed system-wide in the Docker image, so tests/test.sh invokes pytest directly instead of installing dependencies at runtime. The tests cover malformed response handling, retry behavior, failed-state transitions, idempotency, preservation of original events, and the guarantee that completed jobs contain usable summaries. The initial task state fails these tests, while the oracle solution passes them.
+"""
+
+domain = "AI Pipeline Reliability"
+
+timeout = 120
+cpu = 1
+memory = "1GiB"
+disk = "1GiB"
+author_name = "Muhammad Nauman"
+author_email = "nomanawantest1@gmail.com"
