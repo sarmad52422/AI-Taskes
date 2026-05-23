@@ -1,0 +1,29 @@
+name = "inventory-reservation-drift"
+
+author_name = "Muhammad Nauman"
+author_email = "nomanawantest1@gmail.com"
+
+category = "software_engineering"
+tags = ["python", "backend", "debugging", "state-management", "inventory"]
+
+difficulty = "medium"
+expert_time_estimate_hours = 2
+
+difficulty_explanation = """
+This task requires debugging a multi-file Python workflow where state transitions can become inconsistent across repeated runs. The issue involves interactions between reservation handling, retry behavior, and preservation of previously completed work.
+"""
+
+solution_explanation = """
+The intended solution corrects reservation lifecycle handling, ensures retry behavior remains consistent, prevents stale state from persisting after success, and preserves completed records without unintended mutation.
+"""
+
+verification_explanation = """
+Verification uses pytest-based behavioral tests that validate reservation state transitions, retry behavior, repeated execution stability, preservation of completed records, and consistency of persisted state before and after updates.
+"""
+
+domain = "Inventory Systems Reliability"
+
+timeout = 120
+cpu = 1
+memory = "1GiB"
+disk = "1GiB"

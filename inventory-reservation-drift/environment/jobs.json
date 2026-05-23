@@ -1,0 +1,44 @@
+[
+  {
+    "reservation_id": "res-seed-pending",
+    "status": "pending",
+    "retries": 0,
+    "item_id": "sku-lamp",
+    "quantity": 2,
+    "warehouse": "east",
+    "reservation_ids": [],
+    "metadata": {
+      "channel": "web"
+    }
+  },
+  {
+    "reservation_id": "res-seed-retry",
+    "status": "retrying",
+    "retries": 1,
+    "item_id": "sku-cable",
+    "quantity": 4,
+    "warehouse": "west",
+    "reservation_ids": [],
+    "failure_reason": "out_of_stock",
+    "metadata": {
+      "channel": "storefront",
+      "last_error": "out_of_stock",
+      "retry_after": "next-run"
+    }
+  },
+  {
+    "reservation_id": "res-seed-completed",
+    "status": "completed",
+    "retries": 0,
+    "item_id": "sku-drill",
+    "quantity": 1,
+    "warehouse": "east",
+    "reservation_ids": [
+      "res-seed-completed"
+    ],
+    "metadata": {
+      "channel": "bulk",
+      "completed_at": "2026-04-17T10:00:00Z"
+    }
+  }
+]
