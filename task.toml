@@ -1,20 +1,23 @@
 name = "session-summary-worker-reliability"
 
+author_name = "Muhammad Nauman"
+author_email = "nomanawantest1@gmail.com"
+
 category = "software_engineering"
 tags = ["python", "ai", "backend", "reliability", "debugging"]
 difficulty = "medium"
-expert_time_estimate_hours = 1.5
+expert_time_estimate_hours = 2.0
 
 difficulty_explanation = """
-This task requires debugging a multi-file Python worker where failures come from the interaction between malformed model output handling, retry logic, queue state transitions, and repeated worker runs. The issue is more involved than a single syntax fix because a correct solution must preserve existing completed records while safely handling both recoverable and unrecoverable model responses.
+This task requires debugging a worker that combines model response normalization, confidence-based completion, retry transitions, failed-state handling, response normalization, and preservation of previously completed records. A correct fix requires understanding several files and repeated worker behavior rather than patching a single exception.
 """
 
 solution_explanation = """
-The intended solution makes the worker tolerant of malformed-but-readable model responses, adds safer parsing behavior, fixes retry and failed-state transitions, preserves completed jobs, and keeps repeated runs from corrupting queue state or original session events.
+The intended solution normalizes usable model responses across strict and non-strict formats, applies the confidence rule before completion, fixes retry and failed-state transitions, preserves completed records, and avoids leaving partial summary fields on jobs that should not complete.
 """
 
 verification_explanation = """
-The verifier runs pytest tests against the worker behavior. Pytest is installed system-wide in the Docker image, so tests/test.sh invokes pytest directly instead of installing dependencies at runtime. The tests cover malformed response handling, retry behavior, failed-state transitions, idempotency, preservation of original events, and the guarantee that completed jobs contain usable summaries. The initial task state fails these tests, while the oracle solution passes them.
+The verifier runs pytest against the worker behavior. It checks persistence, response normalization, confidence handling, retry behavior, failed-state behavior, metadata preservation, event preservation, repeated runs, and completed-record quality. The initial state fails the behavioral checks and the oracle passes them.
 """
 
 domain = "AI Pipeline Reliability"
@@ -23,5 +26,3 @@ timeout = 120
 cpu = 1
 memory = "1GiB"
 disk = "1GiB"
-author_name = "Muhammad Nauman"
-author_email = "nomanawantest1@gmail.com"

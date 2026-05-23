@@ -6,7 +6,7 @@
     "events": [
       {
         "kind": "session_note",
-        "text": "Player practiced waiting for the cue before moving."
+        "text": "Player waited for the cue before moving."
       },
       {
         "kind": "coach_note",
@@ -15,15 +15,24 @@
     ]
   },
   {
-    "id": "job-already-complete",
-    "status": "completed",
+    "id": "job-json-alias",
+    "status": "pending",
     "retries": 0,
-    "summary": "Player slowed down and found the right rhythm.",
-    "skill": "timing",
     "events": [
       {
         "kind": "session_note",
-        "text": "Historical session that has already been summarized."
+        "text": "Player paused after mistakes and recovered focus."
+      }
+    ]
+  },
+  {
+    "id": "job-low-confidence",
+    "status": "pending",
+    "retries": 0,
+    "events": [
+      {
+        "kind": "session_note",
+        "text": "Player guessed early and missed the timing window."
       }
     ]
   },
@@ -32,5 +41,26 @@
     "status": "pending",
     "retries": 0,
     "events": []
+  },
+  {
+    "id": "job-retrying-empty",
+    "status": "retrying",
+    "retries": 1,
+    "events": []
+  },
+  {
+    "id": "job-already-complete",
+    "status": "completed",
+    "retries": 0,
+    "summary": "Player slowed down and found the right rhythm.",
+    "skill": "timing",
+    "confidence": 0.91,
+    "reviewed_by": "coach-17",
+    "events": [
+      {
+        "kind": "session_note",
+        "text": "Historical session that has already been summarized."
+      }
+    ]
   }
 ]

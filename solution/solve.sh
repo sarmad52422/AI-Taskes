@@ -1,94 +1,108 @@
 #!/bin/bash
-set -euo pipefail
+set -e
 
 cat > /app/queue_manager.py <<'PY'
 MAX_RETRIES = 2
 
 
-def claimable_jobs(jobs):
-    return [
-        job
-        for job in jobs
-        if job.get("status") in {"pending", "retrying"}
-        and job.get("retries", 0) < MAX_RETRIES
-    ]
+def should_process(job):
+    return job.get("status") in {"pending", "retrying"}
 
 
-def record_retry(job):
-    retries = job.get("retries", 0) + 1
-    job["retries"] = retries
-    job["status"] = "failed" if retries >= MAX_RETRIES else "retrying"
-    job.pop("summary", None)
-
-
-def mark_completed(job, summary):
-    job["summary"] = summary
-    job["status"] = "completed"
+def mark_retry(job):
+    job["retries"] = job.get("retries", 0) + 1
+    if job["retries"] >= MAX_RETRIES:
+        job["status"] = "failed"
+    else:
+        job["status"] = "retrying"
 PY
 
 cat > /app/pipeline.py <<'PY'
 import json
 import re
 
-import model_client
-import storage
-from queue_manager import claimable_jobs, mark_completed, record_retry
+from model_client import generate_summary
+from queue_manager import mark_retry, should_process
+from storage import load_jobs, save_jobs
+
+MIN_CONFIDENCE = 0.7
 
 
-def _split_loose_fields(response):
-    fields = {}
-    body = response.strip()
-    if body.startswith("{") and body.endswith("}"):
-        body = body[1:-1]
+def as_float(value):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
-    for part in body.split(","):
-        key, separator, value = part.partition(":")
-        if not separator:
-            continue
-        key = key.strip().strip("'\"")
-        value = value.strip().strip("'\"")
-        if key and value:
-            fields[key] = value
-    return fields
+
+def from_json_object(response):
+    try:
+        data = json.loads(response)
+    except json.JSONDecodeError:
+        return None
+
+    summary = data.get("summary") or data.get("summary_text") or data.get("text")
+    skill = data.get("skill") or data.get("skill_tag") or data.get("skill_name")
+    confidence = as_float(data.get("confidence", data.get("score")))
+
+    if not summary or not skill or confidence is None:
+        return None
+
+    return {"summary": summary.strip(), "skill": skill.strip(), "confidence": confidence}
+
+
+def read_field(response, names):
+    for name in names:
+        pattern = rf"(?:^|[|;])\s*{name}\s*[:=]\s*([^|;]+)"
+        match = re.search(pattern, response, flags=re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+    return None
+
+
+def from_text_response(response):
+    summary = read_field(response, ["summary"])
+    skill = read_field(response, ["skill"])
+    confidence = as_float(read_field(response, ["confidence", "score"]))
+
+    if not summary or not skill or confidence is None:
+        return None
+
+    return {"summary": summary, "skill": skill, "confidence": confidence}
 
 
 def parse_model_response(response):
-    try:
-        parsed = json.loads(response)
-    except (TypeError, json.JSONDecodeError):
-        parsed = _split_loose_fields(response) if isinstance(response, str) else {}
-
-    if not isinstance(parsed, dict):
-        return None
-
-    summary = parsed.get("summary")
-    if not isinstance(summary, str):
-        return None
-
-    summary = re.sub(r"\s+", " ", summary).strip()
-    if not summary:
-        return None
-
-    skill = parsed.get("skill")
-    return {
-        "summary": summary,
-        "skill": skill.strip() if isinstance(skill, str) and skill.strip() else None,
-    }
+    return from_json_object(response) or from_text_response(response)
 
 
-def process_jobs(path=storage.DEFAULT_PATH):
-    jobs = storage.load_jobs(path)
+def clear_partial_result(job):
+    job.pop("summary", None)
+    job.pop("skill", None)
+    job.pop("confidence", None)
 
-    for job in claimable_jobs(jobs):
-        parsed = parse_model_response(model_client.summarize(job))
-        if parsed is None:
-            record_retry(job)
+
+def complete_job(job, parsed):
+    job["summary"] = parsed["summary"]
+    job["skill"] = parsed["skill"]
+    job["confidence"] = parsed["confidence"]
+    job["status"] = "completed"
+
+
+def process_jobs():
+    jobs = load_jobs()
+
+    for job in jobs:
+        if not should_process(job):
             continue
 
-        mark_completed(job, parsed["summary"])
-        if parsed["skill"]:
-            job["skill"] = parsed["skill"]
+        parsed = parse_model_response(generate_summary(job))
 
-    storage.save_jobs(jobs, path)
+        if parsed and parsed["confidence"] >= MIN_CONFIDENCE:
+            complete_job(job, parsed)
+        else:
+            clear_partial_result(job)
+            mark_retry(job)
+
+    save_jobs(jobs)
     return jobs
 PY

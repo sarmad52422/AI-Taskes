@@ -2,16 +2,8 @@
 set +e
 
 mkdir -p /logs/verifier
-
-if [ -f /app/pipeline.py ]; then
-  task_root="/app"
-else
-  task_root="$(cd "$(dirname "$0")/../environment" && pwd)"
-fi
-
-export PYTHONPATH="$task_root:${PYTHONPATH:-}"
-export TASK_ROOT_FOR_TESTS="$task_root"
-
+cd /app || exit 0
+command -v uv >/dev/null 2>&1
 python -m pytest -rA /tests/test_outputs.py 2>&1
 status=$?
 

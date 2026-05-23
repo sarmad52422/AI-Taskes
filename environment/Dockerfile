@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir pytest==8.4.2 uv
+RUN pip install --no-cache-dir pytest uv
 
 COPY pipeline.py /app/pipeline.py
 COPY model_client.py /app/model_client.py

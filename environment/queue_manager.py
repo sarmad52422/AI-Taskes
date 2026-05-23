@@ -1,21 +1,13 @@
-MAX_RETRIES = 3
+MAX_RETRIES = 2
 
 
-def claimable_jobs(jobs):
-    return [
-        job
-        for job in jobs
-        if job.get("status") in {"pending", "retrying", "completed"}
-        and job.get("retries", 0) < MAX_RETRIES
-    ]
+def should_process(job):
+    return job.get("status") != "failed"
 
 
-def record_retry(job):
-    retries = job.get("retries", 0) + 1
-    job["retries"] = retries
-    job["status"] = "retrying"
-
-
-def mark_completed(job, summary):
-    job["summary"] = summary
-    job["status"] = "completed"
+def mark_retry(job):
+    job["retries"] = job.get("retries", 0) + 1
+    if job["retries"] > MAX_RETRIES:
+        job["status"] = "failed"
+    else:
+        job["status"] = "retrying"
