@@ -1,0 +1,69 @@
+{
+  "documents": {
+    "doc-guide": {
+      "chunks": {
+        "body": "The retriever ranks policy passages using normalized embeddings.",
+        "intro": "A short guide to vector indexing for search."
+      }
+    },
+    "doc-legacy": {
+      "chunks": {
+        "summary": "Legacy indexed record."
+      }
+    }
+  },
+  "embedding_cache": {
+    "doc-legacy": {
+      "model": "embed-small-v1",
+      "vectors": {
+        "summary": {
+          "embedding_id": "seed-completed:embed-small-v1:summary",
+          "job_id": "seed-completed",
+          "model": "embed-small-v1",
+          "text_sha": "legacy",
+          "vector": [
+            0.1,
+            0.2,
+            0.3,
+            0.4
+          ],
+          "write_count": 1
+        }
+      }
+    }
+  },
+  "jobs": [
+    {
+      "chunks": [
+        "intro",
+        "body"
+      ],
+      "document_id": "doc-guide",
+      "embedding_ids": [],
+      "job_id": "seed-pending",
+      "metadata": {
+        "source": "daily-index"
+      },
+      "model": "embed-small-v1",
+      "retries": 0,
+      "status": "pending"
+    },
+    {
+      "chunks": [
+        "summary"
+      ],
+      "document_id": "doc-legacy",
+      "embedding_ids": [
+        "seed-completed:embed-small-v1:summary"
+      ],
+      "job_id": "seed-completed",
+      "metadata": {
+        "completed_at": "2026-05-01T09:00:00Z",
+        "source": "backfill"
+      },
+      "model": "embed-small-v1",
+      "retries": 0,
+      "status": "completed"
+    }
+  ]
+}

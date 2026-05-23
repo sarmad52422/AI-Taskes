@@ -1,0 +1,29 @@
+name = "embedding-cache-drift"
+
+author_name = "Muhammad Nauman"
+author_email = "nomanawantest1@gmail.com"
+
+category = "software_engineering"
+tags = ["python", "backend", "debugging", "data-processing", "ai"]
+
+difficulty = "medium"
+expert_time_estimate_hours = 2
+
+difficulty_explanation = """
+This task requires debugging a multi-file Python workflow where embedding cache state can drift across repeated indexing runs. The issue involves chunk availability, retry handling, stale metadata cleanup, cache idempotency, and preservation of completed records.
+"""
+
+solution_explanation = """
+The intended solution corrects indexing state transitions, prevents duplicate embedding effects, clears stale retry metadata after successful recovery, and keeps terminal records stable across repeated runs.
+"""
+
+verification_explanation = """
+Verification uses pytest-based behavioral tests that validate embedding persistence, retry behavior, repeated execution stability, partial cache recovery, stale state cleanup, and consistency of persisted cache state.
+"""
+
+domain = "AI Data Processing Reliability"
+
+timeout = 120
+cpu = 1
+memory = "1GiB"
+disk = "1GiB"
