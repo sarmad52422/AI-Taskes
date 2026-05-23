@@ -1,8 +1,8 @@
 We have a reliability bug in the session summary worker.
 
-The worker consumes queued session-summary jobs from `/app/data/jobs.json`, asks the model client for a structured response, and stores the summary back on the job. The relevant application code is in `/app/queue_manager.py` and `/app/pipeline.py`. In production the model is usually cooperative, but it sometimes returns a readable object-like response that is not strict JSON. Those responses are currently enough to knock over a worker run, and the queue state after a retry has been hard to reason about.
+The worker consumes queued session-summary jobs from `/app/jobs.json`, asks the model client for a structured response, and stores the summary back on the job. The relevant application code is in `/app/queue_manager.py` and `/app/pipeline.py`. In production the model is usually cooperative, but it sometimes returns a readable object-like response that is not strict JSON. Those responses are currently enough to knock over a worker run, and the queue state after a retry has been hard to reason about.
 
-Jobs in `jobs.json` are JSON objects with this shape:
+Jobs in `/app/jobs.json` are JSON objects with this shape:
 
 - `id`: string identifier for the job.
 - `status`: one of `pending`, `retrying`, `completed`, or `failed`.

@@ -1,23 +1,20 @@
 import copy
 import json
+import os
 import sys
 from pathlib import Path
 
 import pytest
 
 
-APP_ROOT = Path.cwd()
-for candidate in (Path.cwd(), Path.cwd().parent, Path("/app")):
-    if (candidate / "app" / "pipeline.py").exists():
-        APP_ROOT = candidate
-        sys.path.insert(0, str(candidate))
-        break
+APP_ROOT = Path(os.environ.get("TASK_ROOT_FOR_TESTS", "/app"))
+sys.path.insert(0, str(APP_ROOT))
 
-from app.pipeline import process_jobs
-from app.storage import load_jobs
+from pipeline import process_jobs
+from storage import load_jobs
 
 
-DATA_PATH = APP_ROOT / "data" / "jobs.json"
+DATA_PATH = APP_ROOT / "jobs.json"
 BASE_JOBS = [
     {
         "id": "job-readable-malformed",
@@ -99,10 +96,7 @@ def test_unusable_response_fails_after_retry_limit():
 
 
 def test_original_events_are_preserved():
-    original_events = {
-        job["id"]: copy.deepcopy(job["events"])
-        for job in BASE_JOBS
-    }
+    original_events = {job["id"]: copy.deepcopy(job["events"]) for job in BASE_JOBS}
 
     jobs = process_jobs()
 

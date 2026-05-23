@@ -1,7 +1,8 @@
 import json
 
-from app import model_client, storage
-from app.queue_manager import claimable_jobs, mark_completed, record_retry
+import model_client
+import storage
+from queue_manager import claimable_jobs, mark_completed, record_retry
 
 
 def parse_model_response(response):

@@ -1,7 +1,7 @@
 [
   {
     "id": "job-readable-malformed",
-    "status": "completed",
+    "status": "pending",
     "retries": 0,
     "events": [
       {
@@ -12,9 +12,7 @@
         "kind": "coach_note",
         "text": "Timing improved late in the round."
       }
-    ],
-    "summary": "Player improved timing",
-    "skill": "patience"
+    ]
   },
   {
     "id": "job-already-complete",
@@ -31,8 +29,8 @@
   },
   {
     "id": "job-empty-events",
-    "status": "failed",
-    "retries": 2,
+    "status": "pending",
+    "retries": 0,
     "events": []
   }
 ]

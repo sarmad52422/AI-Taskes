@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 
-DEFAULT_PATH = Path(__file__).resolve().parents[1] / "data" / "jobs.json"
+DEFAULT_PATH = Path("/app/jobs.json")
 
 
 def load_jobs(path=DEFAULT_PATH):
