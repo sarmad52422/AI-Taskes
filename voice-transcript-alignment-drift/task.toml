@@ -1,0 +1,29 @@
+name = "voice-transcript-alignment-drift"
+
+author_name = "Muhammad Nauman"
+author_email = "nomanawantest1@gmail.com"
+
+category = "software_engineering"
+tags = ["python", "backend", "debugging", "speech", "data-processing"]
+
+difficulty = "medium"
+expert_time_estimate_hours = 2
+
+difficulty_explanation = """
+This task requires debugging a multi-file Python workflow where speech transcript alignment state can drift across repeated worker runs. The issue involves segment availability, retry handling, stale metadata cleanup, idempotency, and preservation of terminal alignment records.
+"""
+
+solution_explanation = """
+The intended solution corrects alignment state transitions, prevents duplicate alignment effects, clears stale retry metadata after successful recovery, and keeps terminal records stable across repeated runs.
+"""
+
+verification_explanation = """
+Verification uses pytest-based behavioral tests that validate alignment persistence, retry behavior, repeated execution stability, partial cache recovery, stale state cleanup, and consistency of persisted speech alignment state.
+"""
+
+domain = "Speech Data Processing Reliability"
+
+timeout = 120
+cpu = 1
+memory = "1GiB"
+disk = "1GiB"
