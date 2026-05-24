@@ -1,0 +1,29 @@
+name = "feature-rollout-drift"
+
+author_name = "Muhammad Nauman"
+author_email = "nomanawantest1@gmail.com"
+
+category = "software_engineering"
+tags = ["python", "backend", "debugging", "feature-flags", "state-management"]
+
+difficulty = "medium"
+expert_time_estimate_hours = 2
+
+difficulty_explanation = """
+This task requires debugging a multi-file Python workflow where rollout assignment state can drift across repeated worker runs. The issue involves audience selection, retry handling, stale metadata cleanup, idempotency, and preservation of terminal rollout records.
+"""
+
+solution_explanation = """
+The intended solution corrects rollout state transitions, prevents duplicate assignment effects, clears stale retry metadata after successful recovery, and keeps terminal records stable across repeated runs.
+"""
+
+verification_explanation = """
+Verification uses pytest-based behavioral tests that validate assignment persistence, retry behavior, repeated execution stability, partial cohort recovery, stale state cleanup, and consistency of persisted rollout state.
+"""
+
+domain = "Feature Rollout Reliability"
+
+timeout = 120
+cpu = 1
+memory = "1GiB"
+disk = "1GiB"

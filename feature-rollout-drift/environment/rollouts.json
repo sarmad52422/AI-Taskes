@@ -1,0 +1,60 @@
+{
+  "assignments": {
+    "search-v2": {
+      "legacy": {
+        "assigned_count": 1,
+        "users": {
+          "user-legacy": {
+            "assignment_id": "rollout-completed:user-legacy",
+            "rollout_id": "rollout-completed",
+            "status": "active",
+            "write_count": 1
+          }
+        }
+      }
+    }
+  },
+  "jobs": [
+    {
+      "assignment_ids": [],
+      "feature_key": "search-v2",
+      "metadata": {
+        "source": "launch-plan"
+      },
+      "retries": 0,
+      "rollout_id": "rollout-pending",
+      "segment": "beta",
+      "status": "pending",
+      "target_count": 2
+    },
+    {
+      "assignment_ids": [
+        "rollout-completed:user-legacy"
+      ],
+      "feature_key": "search-v2",
+      "metadata": {
+        "completed_at": "2026-05-01T09:00:00Z",
+        "source": "migration"
+      },
+      "retries": 0,
+      "rollout_id": "rollout-completed",
+      "segment": "legacy",
+      "status": "completed",
+      "target_count": 1
+    }
+  ],
+  "segments": {
+    "beta": {
+      "eligible_users": [
+        "user-a",
+        "user-b",
+        "user-c"
+      ]
+    },
+    "legacy": {
+      "eligible_users": [
+        "user-legacy"
+      ]
+    }
+  }
+}
