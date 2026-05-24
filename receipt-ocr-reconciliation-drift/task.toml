@@ -1,0 +1,21 @@
+name = "receipt-ocr-reconciliation-drift"
+author_name = "Muhammad Nauman"
+author_email = "nomanawantest1@gmail.com"
+category = "software_engineering"
+tags = ["python", "debugging", "ocr", "data-processing", "state-management"]
+difficulty = "medium"
+expert_time_estimate_hours = 2
+difficulty_explanation = """
+The task asks the agent to debug a small OCR reconciliation worker where retry handling, cache ownership, stale OCR page data, and idempotent persistence interact across multiple files. The bug is not isolated to one branch: a correct fix needs changes in store helpers, retry rules, and worker transitions.
+"""
+solution_explanation = """
+The intended solution makes reconciliation atomic for incomplete OCR passes, preserves terminal jobs, normalizes field ids, handles conflict ownership, refreshes stale same-job records, and clears retry metadata after recovery without deleting unrelated metadata.
+"""
+verification_explanation = """
+The verifier runs pytest tests that exercise successful reconciliation, retry behavior, terminal state preservation, idempotency across repeated runs, stale cache refresh, ownership conflicts, metadata cleanup, and consistency between returned and persisted documents.
+"""
+domain = "ai_data_processing"
+timeout = 120
+cpu = 1
+memory = "1GiB"
+disk = "1GiB"
