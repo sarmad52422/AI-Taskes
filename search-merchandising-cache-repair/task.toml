@@ -1,0 +1,21 @@
+name = "search-merchandising-cache-repair"
+author_name = "Muhammad Nauman"
+author_email = "nomanawantest1@gmail.com"
+category = "software_engineering"
+tags = ["python", "debugging", "search", "cache", "state-reconciliation"]
+difficulty = "medium"
+expert_time_estimate_hours = 2
+difficulty_explanation = """
+This task combines search ranking with row-level cache reconciliation. A correct fix must reason about active experiment ownership, protected editorial rows, retryable conflicts, partial refresh reuse, stale row cleanup, manual slot preservation, and repeated-run stability.
+"""
+solution_explanation = """
+The intended solution chooses the active query-scoped policy, filters and scores eligible products, preserves valid editorial manual slots, detects protected row ownership conflicts, refreshes only stale active-owner rows, drops stale product ids, clears resolved failure state, and keeps valid cached rows stable across reruns.
+"""
+verification_explanation = """
+The verifier runs pytest tests covering protected owner conflicts, retry exhaustion, partial cache recovery, manual slot preservation, stale row removal, duplicate product id normalization, write_count stability, refreshed stale rows, conflict cleanup, and persisted output consistency.
+"""
+domain = "search"
+timeout = 120
+cpu = 1
+memory = "1GiB"
+disk = "1GiB"

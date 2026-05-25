@@ -1,0 +1,54 @@
+{
+  "campaigns": {
+    "C1": {
+      "account_id": "A1",
+      "daily_budget_cents": 10000,
+      "status": "active"
+    }
+  },
+  "spend_events": {
+    "E1": {
+      "campaign_id": "C1",
+      "account_id": "A1",
+      "window": "2026-05-25",
+      "amount_cents": 1200,
+      "version": 3
+    },
+    "E2": {
+      "campaign_id": "C1",
+      "account_id": "A1",
+      "window": "2026-05-25",
+      "amount_cents": 1800,
+      "version": 1
+    }
+  },
+  "budget_ledger": {},
+  "manual_holds": {
+    "H1": {
+      "campaign_id": "C1",
+      "account_id": "A1",
+      "window": "2026-05-25",
+      "amount_cents": 500,
+      "reason": "manager_hold"
+    }
+  },
+  "jobs": [
+    {
+      "id": "JOB1",
+      "campaign_id": "C1",
+      "account_id": "A1",
+      "window": "2026-05-25",
+      "expected_event_ids": [
+        "E1",
+        "E2",
+        "E1"
+      ],
+      "status": "pending",
+      "attempts": 0,
+      "max_attempts": 2,
+      "metadata": {
+        "feed": "adx"
+      }
+    }
+  ]
+}

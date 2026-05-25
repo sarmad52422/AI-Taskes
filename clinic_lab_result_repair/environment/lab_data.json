@@ -1,0 +1,25 @@
+{
+  "jobs": [
+    {
+      "job_id": "J1",
+      "patient_id": "P1",
+      "required_tests": [
+        "CBC"
+      ],
+      "status": "queued",
+      "attempts": 0,
+      "max_attempts": 2,
+      "metadata": {}
+    }
+  ],
+  "samples": {
+    "P1": {
+      "CBC": {
+        "value": "normal",
+        "unit": "flag",
+        "version": 1
+      }
+    }
+  },
+  "result_rows": []
+}

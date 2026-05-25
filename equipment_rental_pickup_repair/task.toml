@@ -1,0 +1,21 @@
+name = "equipment-rental-pickup-repair"
+author_name = "Muhammad Nauman"
+author_email = "nomanawantest1@gmail.com"
+category = "software_engineering"
+tags = ["python", "debugging", "backend", "state-management", "rentals"]
+difficulty = "medium"
+expert_time_estimate_hours = 2
+difficulty_explanation = """
+The task requires repairing an equipment rental allocation worker that must coordinate booking statuses, retry attempts, partial reservation reuse, stale same-owner cleanup, protected other-owner rows, and metadata cleanup across repeated runs. A correct fix has to reason about persisted JSON state rather than applying one deterministic transformation.
+"""
+solution_explanation = """
+The intended repair loads the pickup allocation document, processes only active bookings, validates available units against protected reservations, reuses valid partial rows, refreshes stale same-owner rows, handles conflicts and missing inventory through retry/failure transitions, clears stale failure metadata after recovery, and persists exactly the returned document.
+"""
+verification_explanation = """
+The verifier covers happy-path allocation, missing stock retry behavior, retry recovery, exhausted retry failure, terminal booking preservation, repeated-run stability, stale metadata cleanup, partial state reuse, stale same-owner refresh, protected other-owner conflict handling, duplicate item normalization, and persisted return equivalence.
+"""
+domain = "backend"
+timeout = 120
+cpu = 1
+memory = "1GiB"
+disk = "1GiB"

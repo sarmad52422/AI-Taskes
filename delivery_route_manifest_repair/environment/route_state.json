@@ -1,0 +1,44 @@
+{
+  "stops": {
+    "S1": {
+      "route_id": "R1",
+      "driver_id": "D1",
+      "address": "10 Main",
+      "packages": [
+        "P1",
+        "P2",
+        "P1"
+      ],
+      "scan_version": 4
+    },
+    "S2": {
+      "route_id": "R1",
+      "driver_id": "D1",
+      "address": "12 Main",
+      "packages": [
+        "P3"
+      ],
+      "scan_version": 2
+    }
+  },
+  "manifests": {},
+  "audit_log": [],
+  "jobs": [
+    {
+      "id": "JOB1",
+      "route_id": "R1",
+      "driver_id": "D1",
+      "expected_stop_ids": [
+        "S1",
+        "S2",
+        "S1"
+      ],
+      "status": "pending",
+      "attempts": 0,
+      "max_attempts": 2,
+      "metadata": {
+        "batch": "am"
+      }
+    }
+  ]
+}

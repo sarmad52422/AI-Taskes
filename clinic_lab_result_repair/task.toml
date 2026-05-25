@@ -1,0 +1,21 @@
+name = "clinic-lab-result-repair"
+author_name = "Muhammad Nauman"
+author_email = "nomanawantest1@gmail.com"
+category = "software_engineering"
+tags = ["python", "debugging", "backend", "state-management", "healthcare"]
+difficulty = "medium"
+expert_time_estimate_hours = 2
+difficulty_explanation = """
+The task combines job retry state, persisted JSON rows, same-owner stale refresh, protected result ownership, partial report reuse, idempotent reruns, and selective cleanup of stale error metadata.
+"""
+solution_explanation = """
+The intended repair processes only active jobs, reuses fresh owned rows, refreshes stale owned rows, refuses to overwrite rows owned by another active job, handles missing samples with retry exhaustion, clears only stale failure metadata after success, and persists exactly the returned document.
+"""
+verification_explanation = """
+The verifier checks active processing, missing-input retries, retry recovery, terminal preservation, conflict behavior, stale row cleanup, metadata preservation, idempotency, and persisted return equality.
+"""
+domain = "backend"
+timeout = 120
+cpu = 1
+memory = "1GiB"
+disk = "1GiB"

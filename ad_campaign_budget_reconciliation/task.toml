@@ -1,0 +1,21 @@
+name = "ad-campaign-budget-reconciliation"
+author_name = "Muhammad Nauman"
+author_email = "nomanawantest1@gmail.com"
+category = "software_engineering"
+tags = ["python", "debugging", "backend", "ads", "state-reconciliation"]
+difficulty = "medium"
+expert_time_estimate_hours = 2
+difficulty_explanation = """
+This task combines exchange spend reconciliation, campaign availability, protected ledger ownership, manual budget hold preservation, stale same-owner rows, retry exhaustion, and repeated-run stability.
+"""
+solution_explanation = """
+The intended solution preflights campaign and spend events, blocks active-owner ledger conflicts, preserves manual holds, reuses fresh same-owner rows, refreshes stale rows, clears retry metadata after recovery, and computes idempotent budget summaries.
+"""
+verification_explanation = """
+The verifier covers source failures, inactive campaigns, terminal jobs, manual holds, duplicate event ids, same-owner ledger reuse and refresh, active-owner conflicts, terminal-owner reclaim, and stable reruns.
+"""
+domain = "backend"
+timeout = 120
+cpu = 1
+memory = "1GiB"
+disk = "1GiB"

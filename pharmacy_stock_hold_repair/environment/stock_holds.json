@@ -1,0 +1,46 @@
+{
+  "inventory": {
+    "amox-500": {"on_hand": 20},
+    "para-500": {"on_hand": 50},
+    "ator-10": {"on_hand": 8},
+    "insulin-pen": {"on_hand": 3}
+  },
+  "orders": [
+    {
+      "id": "rx-1001",
+      "status": "queued",
+      "items": [
+        {"medicine_id": "amox-500", "qty": 2},
+        {"medicine_id": "para-500", "qty": 4}
+      ],
+      "attempts": 0,
+      "max_attempts": 2,
+      "metadata": {"priority": "normal"}
+    },
+    {
+      "id": "rx-1002",
+      "status": "retrying",
+      "items": [
+        {"medicine_id": "ator-10", "qty": 5}
+      ],
+      "attempts": 1,
+      "max_attempts": 2,
+      "metadata": {"retry_reason": "stock_unavailable", "customer_note": "call before dispatch"}
+    },
+    {
+      "id": "rx-1003",
+      "status": "held",
+      "items": [
+        {"medicine_id": "insulin-pen", "qty": 1}
+      ],
+      "attempts": 0,
+      "max_attempts": 1,
+      "metadata": {"packed_by": "night-shift"}
+    }
+  ],
+  "holds": [
+    {"order_id": "rx-1002", "medicine_id": "ator-10", "qty": 2, "owner": "hold_worker", "state": "stale", "source_attempt": 1},
+    {"order_id": "rx-1003", "medicine_id": "insulin-pen", "qty": 1, "owner": "hold_worker", "state": "active", "source_attempt": 0}
+  ],
+  "stats": {"holds_created": 0, "holds_refreshed": 0, "conflicts": 0, "failures": 0}
+}

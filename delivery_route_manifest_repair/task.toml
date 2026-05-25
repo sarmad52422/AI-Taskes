@@ -1,0 +1,21 @@
+name = "delivery-route-manifest-repair"
+author_name = "Muhammad Nauman"
+author_email = "nomanawantest1@gmail.com"
+category = "software_engineering"
+tags = ["python", "debugging", "backend", "state-reconciliation", "logistics"]
+difficulty = "medium"
+expert_time_estimate_hours = 2
+difficulty_explanation = """
+This task combines route manifest repair, stop ownership protection, stale same-owner rows, source preflight, audit idempotency, terminal job preservation, and retry exhaustion.
+"""
+solution_explanation = """
+The intended solution preflights all stops, preserves terminal jobs, blocks protected owner conflicts, reuses fresh rows, refreshes stale rows, writes idempotent audit entries, clears stale retry metadata after recovery, and returns the persisted state.
+"""
+verification_explanation = """
+The verifier covers happy path, missing and mismatched stops, retry exhaustion, terminal jobs, stale row refresh, same-owner reuse, owner conflicts, terminal-owner reclaim, and repeated-run stability.
+"""
+domain = "backend"
+timeout = 120
+cpu = 1
+memory = "1GiB"
+disk = "1GiB"

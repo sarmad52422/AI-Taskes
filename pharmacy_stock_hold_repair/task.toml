@@ -1,0 +1,21 @@
+name = "pharmacy-stock-hold-repair"
+author_name = "Muhammad Nauman"
+author_email = "nomanawantest1@gmail.com"
+category = "software_engineering"
+tags = ["python", "debugging", "backend", "state-management", "pharmacy"]
+difficulty = "medium"
+expert_time_estimate_hours = 2
+difficulty_explanation = """
+The task requires repairing a pharmacy stock hold worker that must coordinate order statuses, retry attempts, partial reservation reuse, stale same-owner hold cleanup, protected other-owner holds, and metadata cleanup across repeated runs. A correct fix has to reason about persisted JSON state rather than applying one deterministic transformation.
+"""
+solution_explanation = """
+The intended repair loads the stock hold document, processes only active orders, validates available stock against protected holds, reuses valid partial holds, refreshes stale same-owner holds, handles conflicts and missing inventory through retry/failure transitions, clears stale failure metadata after recovery, and persists exactly the returned document.
+"""
+verification_explanation = """
+The verifier covers happy-path holds, missing stock retry behavior, retry recovery, exhausted retry failure, terminal order preservation, repeated-run stability, stale metadata cleanup, partial state reuse, stale same-owner refresh, protected other-owner conflict handling, and persisted return equivalence.
+"""
+domain = "backend"
+timeout = 120
+cpu = 1
+memory = "1GiB"
+disk = "1GiB"

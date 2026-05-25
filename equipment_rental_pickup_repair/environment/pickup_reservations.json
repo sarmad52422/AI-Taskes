@@ -1,0 +1,46 @@
+{
+  "inventory": {
+    "drill-kit": {"on_hand": 20},
+    "ladder-8ft": {"on_hand": 50},
+    "tile-saw": {"on_hand": 8},
+    "paint-sprayer": {"on_hand": 3}
+  },
+  "bookings": [
+    {
+      "id": "rent-1001",
+      "status": "queued",
+      "items": [
+        {"equipment_id": "drill-kit", "units": 2},
+        {"equipment_id": "ladder-8ft", "units": 4}
+      ],
+      "attempts": 0,
+      "max_attempts": 2,
+      "metadata": {"priority": "normal"}
+    },
+    {
+      "id": "rent-1002",
+      "status": "retrying",
+      "items": [
+        {"equipment_id": "tile-saw", "units": 5}
+      ],
+      "attempts": 1,
+      "max_attempts": 2,
+      "metadata": {"retry_reason": "unit_unavailable", "customer_note": "call before dispatch"}
+    },
+    {
+      "id": "rent-1003",
+      "status": "allocated",
+      "items": [
+        {"equipment_id": "paint-sprayer", "units": 1}
+      ],
+      "attempts": 0,
+      "max_attempts": 1,
+      "metadata": {"packed_by": "night-shift"}
+    }
+  ],
+  "reservations": [
+    {"booking_id": "rent-1002", "equipment_id": "tile-saw", "units": 2, "owner": "pickup_worker", "state": "stale", "source_attempt": 1},
+    {"booking_id": "rent-1003", "equipment_id": "paint-sprayer", "units": 1, "owner": "pickup_worker", "state": "active", "source_attempt": 0}
+  ],
+  "stats": {"reservations_created": 0, "reservations_refreshed": 0, "conflicts": 0, "failures": 0}
+}
