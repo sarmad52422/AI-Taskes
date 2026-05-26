@@ -1,0 +1,21 @@
+name = "marketplace-payout-settlement-repair"
+author_name = "Muhammad Nauman"
+author_email = "nomanawantest1@gmail.com"
+category = "software_engineering"
+tags = ['python', 'debugging', 'marketplace', 'payouts', 'state-management']
+difficulty = "medium"
+expert_time_estimate_hours = 2
+difficulty_explanation = """
+This task combines persisted allocation state, active retry processing, protected external ownership, stale same-owner cleanup, and repeated-run stability. A correct fix has to reason about availability before writing partial rows, terminal record preservation, conflict classification, and metadata cleanup after recovery.
+"""
+solution_explanation = """
+The intended solution processes only active records, validates all requested resources before writing, reuses matching same-owner rows, refreshes stale same-owner rows, removes obsolete same-owner rows, preserves protected external rows, records retry or failure reasons, and keeps persisted state stable across reruns.
+"""
+verification_explanation = """
+The verifier covers successful processing, missing resource retry and exhaustion, terminal preservation, stale metadata cleanup, duplicate request normalization, same-owner reuse and refresh, protected-owner conflicts, repeated-run stability, and persisted return equality.
+"""
+domain = "backend"
+timeout = 120
+cpu = 1
+memory = "1GiB"
+disk = "1GiB"

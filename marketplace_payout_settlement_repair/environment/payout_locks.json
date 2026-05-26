@@ -1,0 +1,46 @@
+{
+  "balances": {
+    "vendor-alpha": {"available_cents": 20},
+    "vendor-beta": {"available_cents": 50},
+    "vendor-gamma": {"available_cents": 8},
+    "vendor-delta": {"available_cents": 3}
+  },
+  "payouts": [
+    {
+      "id": "rx-1001",
+      "status": "queued",
+      "lines": [
+        {"vendor_id": "vendor-alpha", "amount_cents": 2},
+        {"vendor_id": "vendor-beta", "amount_cents": 4}
+      ],
+      "attempts": 0,
+      "max_attempts": 2,
+      "metadata": {"priority": "normal"}
+    },
+    {
+      "id": "rx-1002",
+      "status": "retrying",
+      "lines": [
+        {"vendor_id": "vendor-gamma", "amount_cents": 5}
+      ],
+      "attempts": 1,
+      "max_attempts": 2,
+      "metadata": {"retry_reason": "funds_unavailable", "vendor_note": "call before dispatch"}
+    },
+    {
+      "id": "rx-1003",
+      "status": "settled",
+      "lines": [
+        {"vendor_id": "vendor-delta", "amount_cents": 1}
+      ],
+      "attempts": 0,
+      "max_attempts": 1,
+      "metadata": {"packed_by": "night-shift"}
+    }
+  ],
+  "locks": [
+    {"payout_id": "rx-1002", "vendor_id": "vendor-gamma", "amount_cents": 2, "owner": "payout_worker", "state": "stale", "source_attempt": 1},
+    {"payout_id": "rx-1003", "vendor_id": "vendor-delta", "amount_cents": 1, "owner": "payout_worker", "state": "active", "source_attempt": 0}
+  ],
+  "stats": {"locks_created": 0, "locks_refreshed": 0, "conflicts": 0, "failures": 0}
+}

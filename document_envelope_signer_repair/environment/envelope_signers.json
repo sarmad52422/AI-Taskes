@@ -1,0 +1,46 @@
+{
+  "role_capacity": {
+    "buyer": {"available_slots": 20},
+    "seller": {"available_slots": 50},
+    "witness": {"available_slots": 8},
+    "notary": {"available_slots": 3}
+  },
+  "envelopes": [
+    {
+      "id": "rx-1001",
+      "status": "queued",
+      "signer_requests": [
+        {"signer_role": "buyer", "slot_count": 2},
+        {"signer_role": "seller", "slot_count": 4}
+      ],
+      "attempts": 0,
+      "max_attempts": 2,
+      "metadata": {"priority": "normal"}
+    },
+    {
+      "id": "rx-1002",
+      "status": "retrying",
+      "signer_requests": [
+        {"signer_role": "witness", "slot_count": 5}
+      ],
+      "attempts": 1,
+      "max_attempts": 2,
+      "metadata": {"retry_reason": "signer_slot_unavailable", "sender_note": "call before dispatch"}
+    },
+    {
+      "id": "rx-1003",
+      "status": "ready",
+      "signer_requests": [
+        {"signer_role": "notary", "slot_count": 1}
+      ],
+      "attempts": 0,
+      "max_attempts": 1,
+      "metadata": {"packed_by": "night-shift"}
+    }
+  ],
+  "slots": [
+    {"envelope_id": "rx-1002", "signer_role": "witness", "slot_count": 2, "owner": "signer_worker", "state": "stale", "source_attempt": 1},
+    {"envelope_id": "rx-1003", "signer_role": "notary", "slot_count": 1, "owner": "signer_worker", "state": "active", "source_attempt": 0}
+  ],
+  "stats": {"slots_created": 0, "slots_refreshed": 0, "conflicts": 0, "failures": 0}
+}
